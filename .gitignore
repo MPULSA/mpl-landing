@@ -1,0 +1,14 @@
+# System Files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# SSL Certificates
+*.pem
+
+# IDEs
+.vscode/
+.idea/
