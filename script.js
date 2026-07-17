@@ -306,7 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (chatToggleBtn && chatWindow) {
         // Chat history storage for the conversation session
         const messages = [
-            { role: 'assistant', content: '¡Hola! Soy el asistente de ventas inteligente de MPULSA. Estoy aquí para ayudarte a conocer nuestros servicios y planes, o para coordinar una reunión de diagnóstico gratuito para tu negocio. ¿En qué te puedo asesorar hoy?' }
+            { role: 'assistant', content: '¡Hola! Soy Neo, el asistente de ventas inteligente de MPULSA. Estoy aquí para ayudarte a conocer nuestros servicios y planes, o para coordinar una reunión de diagnóstico gratuito para tu negocio. ¿En qué te puedo asesorar hoy?' }
         ];
 
         // Determine API URL based on environment (local vs production)
