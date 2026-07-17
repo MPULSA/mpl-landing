@@ -316,13 +316,35 @@ document.addEventListener('DOMContentLoaded', () => {
         // Toggle Chat
         function toggleChat() {
             chatWindow.classList.toggle('active');
+            const callout = document.querySelector('.chat-callout');
             if (chatWindow.classList.contains('active')) {
                 chatInput.focus();
+                if (callout) {
+                    callout.style.opacity = '0';
+                    callout.style.pointerEvents = 'none';
+                }
+            } else {
+                if (callout && !callout.classList.contains('dismissed')) {
+                    callout.style.opacity = '1';
+                    callout.style.pointerEvents = 'auto';
+                }
             }
         }
 
         chatToggleBtn.addEventListener('click', toggleChat);
         chatCloseBtn.addEventListener('click', toggleChat);
+
+        // Callout Dismissal
+        const callout = document.querySelector('.chat-callout');
+        const calloutClose = document.querySelector('.chat-callout-close');
+        if (callout && calloutClose) {
+            calloutClose.addEventListener('click', (e) => {
+                e.stopPropagation(); // prevent toggling the chat window
+                callout.style.opacity = '0';
+                callout.style.pointerEvents = 'none';
+                callout.classList.add('dismissed');
+            });
+        }
 
         // Helper to format bot text (basic markdown to html)
         function formatMessage(text) {
