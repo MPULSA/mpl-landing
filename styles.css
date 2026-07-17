@@ -1150,51 +1150,6 @@ footer {
     font-family: var(--font-main);
 }
 
-/* Floating Commercial Callout */
-.chat-callout {
-    position: absolute;
-    bottom: 75px;
-    right: 5px;
-    background: rgba(15, 23, 42, 0.85); /* Premium glassmorphism dark slate */
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(0, 255, 157, 0.25); /* Subtle brand green border */
-    padding: 10px 16px;
-    border-radius: 16px 16px 4px 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-    white-space: nowrap;
-    font-size: 0.85rem;
-    color: var(--text-primary);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1), transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-    pointer-events: auto;
-    opacity: 1;
-    transform: translateY(0);
-    animation: bounceCallout 4s infinite ease-in-out;
-}
-
-.chat-callout-text strong {
-    color: var(--brand-primary);
-    font-weight: 600;
-}
-
-.chat-callout-close {
-    position: absolute;
-    top: 4px;
-    right: 8px;
-    cursor: pointer;
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    transition: var(--transition);
-}
-
-.chat-callout-close:hover {
-    color: var(--brand-primary);
-    transform: scale(1.1);
-}
-
 .chat-toggle-btn {
     width: 60px;
     height: 60px;
@@ -1218,15 +1173,6 @@ footer {
 }
 
 /* Animations */
-@keyframes bounceCallout {
-    0%, 100% {
-        transform: translateY(0);
-    }
-    50% {
-        transform: translateY(-8px);
-    }
-}
-
 @keyframes chatTogglePulse {
     0% {
         transform: scale(1);
