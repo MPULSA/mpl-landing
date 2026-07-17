@@ -388,7 +388,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 while (true) {
                     const { value, done } = await reader.read();
-                    if (done) break;
+                    if (done) {
+                        if (isFirstChunk) {
+                            botContentDiv.innerHTML = 'Lo siento, el asistente inteligente no está disponible temporalmente. Por favor, intenta de nuevo más tarde o contáctanos a <a href="mailto:impulsa@mpl.com.ar">impulsa@mpl.com.ar</a>.';
+                        }
+                        break;
+                    }
                     const chunk = decoder.decode(value, { stream: true });
                     
                     if (isFirstChunk) {
@@ -401,8 +406,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     chatMessages.scrollTop = chatMessages.scrollHeight;
                 }
 
-                // 5. Save assistant response to conversation history
-                messages.push({ role: 'assistant', content: botResponseText });
+                // 5. Save assistant response to conversation history (only if we received text)
+                if (botResponseText) {
+                    messages.push({ role: 'assistant', content: botResponseText });
+                }
 
                 // 6. Proactive check: if user wants to schedule / book, auto open modal after a short delay
                 const botLower = botResponseText.toLowerCase();
