@@ -295,7 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale').forEach(el => {
         revealObserver.observe(el);
     });
-    // Chatbot Logic
+    // Chatbot Logic - AI Sales Assistant
     const chatToggleBtn = document.querySelector('.chat-toggle-btn');
     const chatCloseBtn = document.querySelector('.chat-close-btn');
     const chatWindow = document.querySelector('.chat-window');
@@ -304,6 +304,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatMessages = document.querySelector('#chat-messages');
 
     if (chatToggleBtn && chatWindow) {
+        // Chat history storage for the conversation session
+        const messages = [
+            { role: 'assistant', content: '¡Hola! Soy el asistente de ventas inteligente de MPULSA. Estoy aquí para ayudarte a conocer nuestros servicios y planes, o para coordinar una reunión de diagnóstico gratuito para tu negocio. ¿En qué te puedo asesorar hoy?' }
+        ];
+
+        // Determine API URL based on environment (local vs production)
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const API_URL = isLocal ? 'http://localhost:3000/api/chat' : 'https://clientportal.mpl.com.ar/api/chat';
+
         // Toggle Chat
         function toggleChat() {
             chatWindow.classList.toggle('active');
@@ -315,7 +324,15 @@ document.addEventListener('DOMContentLoaded', () => {
         chatToggleBtn.addEventListener('click', toggleChat);
         chatCloseBtn.addEventListener('click', toggleChat);
 
-        // Send Message
+        // Helper to format bot text (basic markdown to html)
+        function formatMessage(text) {
+            return text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/\n/g, '<br>');
+        }
+
+        // Add Message element to DOM
         function addMessage(text, sender) {
             const messageDiv = document.createElement('div');
             messageDiv.classList.add('message', `${sender}-message`);
@@ -329,92 +346,78 @@ document.addEventListener('DOMContentLoaded', () => {
 
             chatMessages.appendChild(messageDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight; // Auto scroll
+            return messageDiv;
         }
 
-        // Bot Response Logic - Updated with MPULSA information
-        function getBotResponse(userText) {
-            const text = userText.toLowerCase();
-
-            // Saludos
-            if (text.includes('hola') || text.includes('buenos') || text.includes('buenas')) {
-                return "¡Hola! 👋 Soy el asistente virtual de MPULSA. Estoy aquí para ayudarte a conocer cómo transformamos desafíos en oportunidades de crecimiento. ¿Qué te gustaría saber?";
-            }
-
-            // Servicios generales
-            if (text.includes('servicio') || text.includes('qué hacen') || text.includes('que hacen') || text.includes('ofrecen')) {
-                return "En MPULSA potenciamos tu negocio a través de 3 pilares estratégicos:\n\n1️⃣ Consultoría de Gestión: Estrategia, Personas, Finanzas y Operaciones.\n2️⃣ Agencia de Marketing: Growth, Brand, SEO, Social Media, Eventos, CRM.\n3️⃣ Servicios de Tecnología: IA, Cloud, Ciberseguridad, Desarrollo, Diseño UX/UI.\n\n¿Sobre cuál te gustaría saber más?";
-            }
-
-            // Consultoría de Gestión
-            if (text.includes('consultoría') || text.includes('consultoria') || text.includes('gestión') || text.includes('gestion') || text.includes('estrategia') || text.includes('finanza') || text.includes('operacion') || text.includes('persona')) {
-                return "📊 Consultoría de Gestión:\n\nAcompañamos a tu organización en cada decisión estratégica. Áreas clave:\n• Estratégica: Planificación, Innovación, Transformación Digital.\n• Personas: HR, Diseño Organizacional, Gestión del Cambio.\n• Financiera: CFO Consulting, M&A, Precios.\n• Operaciones: Mejora de Rendimiento, Cadena de Suministro, Sostenibilidad.";
-            }
-
-            // Agencia de Marketing
-            if (text.includes('marketing') || text.includes('agencia') || text.includes('digital') || text.includes('seo') || text.includes('social') || text.includes('publicidad') || text.includes('marca')) {
-                return "🚀 Agencia de Marketing:\n\nEstrategias basadas en datos para impulsar el crecimiento. Incluye:\n• Marketing Digital y Performance\n• Growth Marketing\n• Brand Marketing\n• SEO y Marketing de Contenidos\n• Social Media y Email\n• CRM y Revenue Operations";
-            }
-
-            // Servicios de Tecnología
-            if (text.includes('tecnología') || text.includes('tecnologia') || text.includes('tech') || text.includes('it') || text.includes('software') || text.includes('app') || text.includes('ia') || text.includes('cloud')) {
-                return "💻 Servicios de Tecnología:\n\nSoluciones de vanguardia para escalar tu negocio:\n• Inteligencia Artificial y Data\n• Cloud y DevOps\n• Ciberseguridad\n• Desarrollo de Software y Apps\n• Diseño y UX/UI\n• QA y Automatización";
-            }
-
-            // Proceso de implementación
-            if (text.includes('cómo funciona') || text.includes('como funciona') || text.includes('implementación') || text.includes('implementacion') || text.includes('pasos') || text.includes('proceso')) {
-                return "📋 Nuestro Proceso de 4 Pasos:\n\n1️⃣ Descubrir: Entendemos tus desafíos y objetivos.\n2️⃣ Definir: Alineamos requerimientos con tus metas estratégicas.\n3️⃣ Desarrollar: Creamos el cronograma y los primeros entregables.\n4️⃣ Implementar: Ejecutamos asegurando calidad y resultados.\n\n¡Es simple y eficiente! ¿Quieres comenzar?";
-            }
-
-            // Pricing / Precios / Planes
-            if (text.includes('precio') || text.includes('costo') || text.includes('valor') ||
-                text.includes('plan') || text.includes('planes') || text.includes('presupuesto') ||
-                text.includes('pricing') || text.includes('honorario') || text.includes('tarifa') ||
-                text.includes('cuanto sale') || text.includes('cuánto sale') || text.includes('cuánto cuesta') ||
-                text.includes('cuanto cuesta') || text.includes('esencial') || text.includes('profesional') ||
-                text.includes('mensual') || text.includes('horas')) {
-                return "💼 <b>Nuestros Planes Mensuales:</b><br><br>" +
-                    "🌱 <b>Plan Esencial</b> — 4 hs/mes<br>" +
-                    "&nbsp;&nbsp;&nbsp;$ 600.000 / mes<br><br>" +
-                    "🚀 <b>Plan Profesional</b> — 8 hs/mes<br>" +
-                    "&nbsp;&nbsp;&nbsp;$ 1.080.000 / mes<br><br>" +
-                    "🏢 <b>Plan Empresa</b> — 16 hs/mes<br>" +
-                    "&nbsp;&nbsp;&nbsp;$ 1.920.000 / mes<br><br>" +
-                    "Todos los planes incluyen acceso a nuestra red de contactos y asesoría estratégica personalizada. Los planes más avanzados suman reuniones de seguimiento, informes de KPIs y equipo dedicado.<br><br>" +
-                    "¿Te gustaría conocer más detalles o agendar una reunión? Haz clic en 'Conectar' o escríbenos a <b>impulsa@mpl.com.ar</b>";
-            }
-
-            // Misión y Visión
-            if (text.includes('misión') || text.includes('mision') || text.includes('visión') || text.includes('vision') || text.includes('quiénes son') || text.includes('quienes son') || text.includes('empresa') || text.includes('nosotros')) {
-                return "🏢 Sobre MPULSA:\n\nSomos una consultora de nueva generación.\n\n📜 Misión: Transformar los desafíos de individuos, emprendedores y empresas en oportunidades de crecimiento.\n👁️ Visión: Ser el socio estratégico de referencia en Latinoamérica, reconocidos por convertir obstáculos en motores de crecimiento sostenible.";
-            }
-
-            // Agendar / Reunión
-            if (text.includes('agendar') || text.includes('reunión') || text.includes('reunion') || text.includes('cita') || text.includes('demo')) {
-                return "📅 ¡Excelente! Para agendar una reunión, te abriré el formulario ahora mismo. Si no aparece, haz clic en el botón 'Conectar'.";
-            }
-
-            // Default
-            return "No estoy seguro de entender tu consulta. Por favor, pincha el botón 'Conectar' o escríbenos a impulsa@mpl.com.ar para atención personalizada.";
-        }
-
-        function handleUserMessage(text) {
+        // Send Message to backend and handle stream
+        async function handleUserMessage(text) {
+            // 1. Add user message to UI and history
             addMessage(text, 'user');
+            messages.push({ role: 'user', content: text });
 
-            // Detect booking intent and open modal
-            if (text.toLowerCase().includes('agendar') || text.toLowerCase().includes('reunión') || text.toLowerCase().includes('cita')) {
-                setTimeout(() => {
-                    if (typeof openConectarModal === 'function') {
-                        openConectarModal();
-                    }
-                }, 1500);
+            // Remove suggestion chips if any exist
+            const chips = chatMessages.querySelector('.suggestion-chips');
+            if (chips) {
+                chips.remove();
             }
 
-            // Typing indicator simulation could go here
+            // 2. Create bot message with typing indicator
+            const botMessageDiv = addMessage('', 'bot');
+            const botContentDiv = botMessageDiv.querySelector('.message-content');
+            botContentDiv.innerHTML = '<span class="typing-dots"><span></span><span></span><span></span></span>';
 
-            setTimeout(() => {
-                const botResponse = getBotResponse(text);
-                addMessage(botResponse, 'bot');
-            }, 1000);
+            try {
+                // 3. Make fetch request to Next.js API
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ messages }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                // 4. Stream the text response
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let botResponseText = '';
+                let isFirstChunk = true;
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    const chunk = decoder.decode(value, { stream: true });
+                    
+                    if (isFirstChunk) {
+                        botContentDiv.innerHTML = '';
+                        isFirstChunk = false;
+                    }
+                    
+                    botResponseText += chunk;
+                    botContentDiv.innerHTML = formatMessage(botResponseText);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+
+                // 5. Save assistant response to conversation history
+                messages.push({ role: 'assistant', content: botResponseText });
+
+                // 6. Proactive check: if user wants to schedule / book, auto open modal after a short delay
+                const botLower = botResponseText.toLowerCase();
+                if (botLower.includes('guardar_lead') || botLower.includes('he registrado tus datos') || botLower.includes('formulario de contacto')) {
+                    setTimeout(() => {
+                        if (typeof openConectarModal === 'function') {
+                            openConectarModal();
+                        }
+                    }, 2000);
+                }
+
+            } catch (error) {
+                console.error('Error fetching bot response:', error);
+                botContentDiv.innerHTML = 'Lo siento, ha ocurrido un error al conectar con el asistente de ventas. Por favor, intenta de nuevo más tarde o contáctanos directamente a <a href="mailto:impulsa@mpl.com.ar">impulsa@mpl.com.ar</a>.';
+            }
         }
 
         chatForm.addEventListener('submit', (e) => {
