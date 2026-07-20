@@ -313,16 +313,40 @@ document.addEventListener('DOMContentLoaded', () => {
         const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         const API_URL = isLocal ? 'http://localhost:3000/api/chat' : 'https://clientportal.mpl.com.ar/api/chat';
 
+        let transcriptSentOnClose = false;
+        function sendTranscriptOnClose() {
+            if (transcriptSentOnClose || !messages || messages.length <= 1) return;
+            const hasUserMsg = messages.some(m => m.role === 'user');
+            if (!hasUserMsg) return;
+
+            transcriptSentOnClose = true;
+            const payload = JSON.stringify({ action: 'close', messages });
+            if (navigator.sendBeacon) {
+                navigator.sendBeacon(API_URL, new Blob([payload], { type: 'application/json' }));
+            } else {
+                fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: payload,
+                    keepalive: true
+                }).catch(err => console.error('Error enviando transcripción:', err));
+            }
+        }
+
         // Toggle Chat
         function toggleChat() {
+            const wasActive = chatWindow.classList.contains('active');
             chatWindow.classList.toggle('active');
             if (chatWindow.classList.contains('active')) {
                 chatInput.focus();
+            } else if (wasActive) {
+                sendTranscriptOnClose();
             }
         }
 
         chatToggleBtn.addEventListener('click', toggleChat);
         chatCloseBtn.addEventListener('click', toggleChat);
+        window.addEventListener('beforeunload', sendTranscriptOnClose);
 
         // Helper to format bot text (basic markdown to html)
         function formatMessage(text) {
