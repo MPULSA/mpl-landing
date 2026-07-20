@@ -348,9 +348,16 @@ document.addEventListener('DOMContentLoaded', () => {
         chatCloseBtn.addEventListener('click', toggleChat);
         window.addEventListener('beforeunload', sendTranscriptOnClose);
 
-        // Helper to format bot text (basic markdown to html)
+        // Helper to format bot text (basic markdown to html + clean AI SDK protocol prefixes)
         function formatMessage(text) {
-            return text
+            if (!text) return '';
+            let cleaned = text
+                .replace(/^0:"/, '')
+                .replace(/"$/, '')
+                .replace(/\\n/g, '\n')
+                .replace(/\\"/g, '"');
+
+            return cleaned
                 .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                 .replace(/\*(.*?)\*/g, '<em>$1</em>')
                 .replace(/\n/g, '<br>');
@@ -408,26 +415,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
                 let botResponseText = '';
-                let isFirstChunk = true;
 
                 while (true) {
                     const { value, done } = await reader.read();
-                    if (done) {
-                        if (isFirstChunk) {
-                            botContentDiv.innerHTML = 'Lo siento, el asistente inteligente no está disponible temporalmente. Por favor, intenta de nuevo más tarde o contáctanos a <a href="mailto:impulsa@mpl.com.ar">impulsa@mpl.com.ar</a>.';
-                        }
-                        break;
-                    }
+                    if (done) break;
+
                     const chunk = decoder.decode(value, { stream: true });
-                    
-                    if (isFirstChunk) {
-                        botContentDiv.innerHTML = '';
-                        isFirstChunk = false;
+                    if (chunk) {
+                        botResponseText += chunk;
+                        const formatted = formatMessage(botResponseText);
+                        if (formatted) {
+                            botContentDiv.innerHTML = formatted;
+                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                        }
                     }
-                    
-                    botResponseText += chunk;
-                    botContentDiv.innerHTML = formatMessage(botResponseText);
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+
+                const finalFormatted = formatMessage(botResponseText);
+                if (!finalFormatted || !finalFormatted.trim()) {
+                    botContentDiv.innerHTML = 'Lo siento, el asistente inteligente no está disponible temporalmente. Por favor, intenta de nuevo más tarde o contáctanos a <a href="mailto:impulsa@mpl.com.ar">impulsa@mpl.com.ar</a>.';
+                } else {
+                    botContentDiv.innerHTML = finalFormatted;
                 }
 
                 // 5. Save assistant response to conversation history (only if we received text)
