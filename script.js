@@ -18,12 +18,71 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Close mobile menu when clicking a link
-    mobileLinks.forEach(link => {
-        link.addEventListener('click', () => {
+    // ===== Smooth Scroll System =====
+    function scrollToSection(targetSelector) {
+        // Close mobile menu if open
+        if (menuBtn && mobileMenu && mobileMenu.classList.contains('active')) {
             menuBtn.classList.remove('active');
             mobileMenu.classList.remove('active');
             document.body.style.overflow = '';
+        }
+
+        if (targetSelector === '#' || targetSelector === '#inicio') {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+            return;
+        }
+
+        try {
+            const target = document.querySelector(targetSelector);
+            if (target) {
+                const header = document.querySelector('.header');
+                const headerHeight = header ? header.offsetHeight : 80;
+                const elementPosition = target.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - headerHeight;
+
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
+                });
+            }
+        } catch (err) {
+            console.warn('Scroll error for target:', targetSelector, err);
+        }
+    }
+
+    // Close mobile menu when clicking a link and scroll smoothly
+    mobileLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            const href = link.getAttribute('href');
+            if (href && href.startsWith('#')) {
+                e.preventDefault();
+                scrollToSection(href);
+            } else {
+                if (menuBtn && mobileMenu) {
+                    menuBtn.classList.remove('active');
+                    mobileMenu.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            }
+        });
+    });
+
+    // Desktop and page-wide smooth scroll links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            const href = this.getAttribute('href');
+            if (!href || href === '#' || this.classList.contains('open-modal-btn') || this.classList.contains('open-legal-btn')) {
+                if (href === '#' && !this.classList.contains('open-modal-btn') && !this.classList.contains('open-legal-btn')) {
+                    e.preventDefault();
+                }
+                return;
+            }
+
+            e.preventDefault();
+            scrollToSection(href);
         });
     });
 
@@ -37,8 +96,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeModalBtn = document.querySelector('.modal-close');
     const conectarForm = modal ? modal.querySelector('form') : document.getElementById('conectarForm');
 
-    function openConectarModal() {
+    function openConectarModal(planName) {
         if (modal) {
+            const interestInput = document.getElementById('interest');
+            if (interestInput) {
+                if (planName === 'Plan Semilla') {
+                    interestInput.value = 'Estoy interesado en Plan Semilla (Acceso inicial y diagnóstico)';
+                } else if (planName === 'Plan Esencial') {
+                    interestInput.value = 'Estoy interesado en Plan Esencial ($600.000 / mes)';
+                } else if (planName === 'Plan Profesional') {
+                    interestInput.value = 'Estoy interesado en Plan Profesional ($1.080.000 / mes)';
+                } else if (planName === 'Plan Empresa') {
+                    interestInput.value = 'Estoy interesado en Plan Empresa (Propuesta a medida)';
+                } else if (planName) {
+                    interestInput.value = `Estoy interesado en ${planName}`;
+                } else {
+                    interestInput.value = 'Estoy interesado en que me contacte el equipo de MPULSA';
+                }
+            }
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
         }
@@ -55,7 +130,8 @@ document.addEventListener('DOMContentLoaded', () => {
         openModalBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
-                openConectarModal();
+                const planName = btn.getAttribute('data-plan') || null;
+                openConectarModal(planName);
             });
         });
 
@@ -104,10 +180,84 @@ document.addEventListener('DOMContentLoaded', () => {
         // Check for openModal query param
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('openModal') === 'true') {
-            openConectarModal();
+            const planParam = urlParams.get('plan');
+            openConectarModal(planParam);
             const newUrl = window.location.pathname;
             window.history.replaceState({}, document.title, newUrl);
         }
+    }
+
+    // ===== Legal Modals Logic =====
+    const legalModal = document.getElementById('legalModal');
+    const legalModalTitle = document.getElementById('legalModalTitle');
+    const legalModalBody = document.getElementById('legalModalBody');
+    const legalCloseBtns = document.querySelectorAll('.legal-modal-close');
+    const openLegalBtns = document.querySelectorAll('.open-legal-btn');
+
+    const legalContents = {
+        terminos: {
+            title: 'Términos y Condiciones de Servicio',
+            content: `
+                <p style="margin-bottom: 1rem; color: var(--text-secondary); line-height: 1.6;">Bienvenido a MPULSA. Al acceder y navegar en <strong>www.mpl.com.ar</strong>, aceptas las siguientes pautas generales:</p>
+                <h4 style="color: var(--brand-primary); margin: 1.2rem 0 0.5rem; font-size: 1.1rem;">1. Objeto y Alcance</h4>
+                <p style="margin-bottom: 1rem; color: var(--text-secondary); line-height: 1.6;">MPULSA ofrece consultoría de gestión estratégica, servicios de marketing digital integral y desarrollo de soluciones de tecnología especializada para individuos, emprendedores y empresas.</p>
+                <h4 style="color: var(--brand-primary); margin: 1.2rem 0 0.5rem; font-size: 1.1rem;">2. Propiedad Intelectual</h4>
+                <p style="margin-bottom: 1rem; color: var(--text-secondary); line-height: 1.6;">Todos los contenidos, diseños, marcas e isotipos presentados en este sitio son propiedad exclusiva de MPULSA o de sus respectivos titulares autorizados.</p>
+                <h4 style="color: var(--brand-primary); margin: 1.2rem 0 0.5rem; font-size: 1.1rem;">3. Contrataciones y Acuerdos</h4>
+                <p style="margin-bottom: 1rem; color: var(--text-secondary); line-height: 1.6;">Los alcances de cada plan, horas mensuales y entregables se formalizan y confirman mediante propuesta técnica y comercial acordada con cada cliente.</p>
+                <h4 style="color: var(--brand-primary); margin: 1.2rem 0 0.5rem; font-size: 1.1rem;">4. Contacto</h4>
+                <p style="color: var(--text-secondary); line-height: 1.6;">Para consultas institucionales, contáctanos a <a href="mailto:impulsa@mpl.com.ar" style="color: var(--brand-primary);">impulsa@mpl.com.ar</a>.</p>
+            `
+        },
+        privacidad: {
+            title: 'Política de Privacidad y Protección de Datos',
+            content: `
+                <p style="margin-bottom: 1rem; color: var(--text-secondary); line-height: 1.6;">En MPULSA nos comprometemos a resguardar la confidencialidad y privacidad de los datos de nuestros clientes y visitantes.</p>
+                <h4 style="color: var(--brand-primary); margin: 1.2rem 0 0.5rem; font-size: 1.1rem;">1. Tratamiento de la Información</h4>
+                <p style="margin-bottom: 1rem; color: var(--text-secondary); line-height: 1.6;">Los datos recopilados a través de formularios (nombre, correo electrónico, WhatsApp y empresa) son utilizados únicamente con fines de contacto, diagnóstico y gestión comercial.</p>
+                <h4 style="color: var(--brand-primary); margin: 1.2rem 0 0.5rem; font-size: 1.1rem;">2. Confidencialidad Estricta</h4>
+                <p style="margin-bottom: 1rem; color: var(--text-secondary); line-height: 1.6;">No vendemos, cedemos ni distribuimos información personal o corporativa a terceras partes bajo ningún concepto sin previo consentimiento.</p>
+                <h4 style="color: var(--brand-primary); margin: 1.2rem 0 0.5rem; font-size: 1.1rem;">3. Derechos de Acceso y Rectificación</h4>
+                <p style="color: var(--text-secondary); line-height: 1.6;">Puedes solicitar la actualización o supresión de tus datos en cualquier momento enviando un correo a <a href="mailto:impulsa@mpl.com.ar" style="color: var(--brand-primary);">impulsa@mpl.com.ar</a>.</p>
+            `
+        }
+    };
+
+    function openLegalModal(type) {
+        if (legalModal && legalContents[type]) {
+            legalModalTitle.textContent = legalContents[type].title;
+            legalModalBody.innerHTML = legalContents[type].content;
+            legalModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeLegalModal() {
+        if (legalModal) {
+            legalModal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    }
+
+    openLegalBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const type = btn.getAttribute('data-legal');
+            openLegalModal(type);
+        });
+    });
+
+    legalCloseBtns.forEach(btn => {
+        btn.addEventListener('click', closeLegalModal);
+    });
+
+    if (legalModal) {
+        legalModal.addEventListener('click', (e) => {
+            if (e.target === legalModal) closeLegalModal();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && legalModal.classList.contains('active')) closeLegalModal();
+        });
     }
 
     pillarTabs.forEach(tab => {
@@ -139,34 +289,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // Toggle current accordion
             header.classList.toggle('active');
             body.classList.toggle('active');
-        });
-    });
-
-    // Smooth Scroll (Optional as CSS scroll-behavior: smooth handles most)
-    // Adding it for older browsers or more control if needed
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const href = this.getAttribute('href');
-
-            if (href === '#') {
-                window.scrollTo({
-                    top: 0,
-                    behavior: 'smooth'
-                });
-                return;
-            }
-
-            try {
-                const target = document.querySelector(href);
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth'
-                    });
-                }
-            } catch (error) {
-                console.warn('Invalid selector:', href);
-            }
         });
     });
 
